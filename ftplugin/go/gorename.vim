@@ -1,9 +1,14 @@
 function! s:bytes_offset(line, col) abort
   if &encoding != 'utf-8'
-    let sep = go#util#LineEnding()
-    let buf = a:line == 1 ? '' : (join(getline(1, a:line-1), sep) . sep)
-    let buf .= a:col == 1 ? '' : getline('.')[:a:col-2]
-    return len(iconv(buf, &encoding, 'utf-8'))
+    let l:sep = "\n"
+    if &fileformat == 'dos'
+      let l:sep = "\r\n"
+    elseif &fileformat == 'mac'
+      let l:sep = "\r"
+    endif
+    let l:buf = a:line == 1 ? '' : (join(getline(1, a:line-1), l:sep) . l:sep)
+    let l:buf .= a:col == 1 ? '' : getline('.')[:a:col-2]
+    return len(iconv(l:buf, &encoding, 'utf-8'))
   endif
   return line2byte(a:line) + (a:col-2)
 endfunction
@@ -17,7 +22,7 @@ function! s:handle_errors(content) abort
       continue
     endif
     call add(l:errors,{
-          \'filename': l:tokens[1]
+          \'filename': l:tokens[1],
           \'lnum':     l:tokens[2],
           \'col':      l:tokens[3],
           \'text':     l:tokens[4],
